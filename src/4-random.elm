@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (..)
-import Html.Attributes exposing (style, value)
+import Html.Attributes exposing (style, value, disabled)
 import Html.Events exposing (..)
 import Random
 import Task
@@ -27,6 +27,7 @@ main =
 
 type alias Model =
     { dice : List DieFace
+    , isRolling : Bool
     , numberOfDice : Int
     }
 
@@ -42,7 +43,7 @@ type DieFace
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model [ One ] 1
+    ( Model [ One ] False 1
     , Cmd.none
     )
 
@@ -61,25 +62,25 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Roll count ->
-            ( model
+            ( { model | isRolling = True }
             , Random.generate (NewFace count) (Random.list model.numberOfDice randomDieFace)
             )
 
         NewFace count newDice ->
-            ( Model newDice model.numberOfDice
-            , if count > 25 then
-                Cmd.none
-              else
-                Process.sleep (toFloat (20 + (count * 10)))
+            if count > 25 then
+                ( { model | isRolling = False }, Cmd.none )
+            else
+                ( { model | dice = newDice }
+                , Process.sleep (toFloat (20 + (count * 10)))
                     |> Task.perform (\_ -> Roll (count + 1))
-            )
+                )
 
         UpdateNumberOfDice stringNumberOfDice ->
             let
                 numberOfDice =
                     Maybe.withDefault model.numberOfDice (String.toInt stringNumberOfDice)
             in
-                ( Model model.dice numberOfDice
+                ( { model | numberOfDice = numberOfDice }
                 , Cmd.none
                 )
 
@@ -105,20 +106,21 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [ style "overflow-wrap" "break-word" ] (viewDice model.dice)
-        , div [ style "margin" "1rem 0" ]
-            [ button [ onClick (Roll 0) ] [ text "Roll" ]
-            ]
-        , div []
+        [ div []
             [ label []
                 [ text "Enter a number of dice to roll: "
                 , input
                     [ value (String.fromInt model.numberOfDice)
+                    , disabled model.isRolling
                     , onInput UpdateNumberOfDice
                     ]
                     []
                 ]
             ]
+        , div [ style "margin" "1rem 0" ]
+            [ button [ onClick (Roll 0), disabled model.isRolling ] [ text "Roll" ]
+            ]
+        , div [ style "overflow-wrap" "break-word" ] (viewDice model.dice)
         ]
 
 
