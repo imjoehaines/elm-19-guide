@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (..)
+import Html.Attributes exposing (style)
 import Html.Events exposing (..)
 import Random
 import Task
@@ -80,7 +81,34 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div []
-        [ h2 [] [ text (String.fromInt model.dieFace1) ]
-        , h2 [] [ text (String.fromInt model.dieFace2) ]
-        , button [ onClick (Roll 0) ] [ text "Roll" ]
+        [ span [ style "font-size" "10rem" ] [ text (viewDieFace model.dieFace1) ]
+        , span [ style "font-size" "10rem" ] [ text (viewDieFace model.dieFace2) ]
+        , div []
+            [ button [ onClick (Roll 0) ] [ text "Roll" ]
+            ]
         ]
+
+
+viewDieFace : Int -> String
+viewDieFace dieFace =
+    case dieFace of
+        1 ->
+            "⚀"
+
+        2 ->
+            "⚁"
+
+        3 ->
+            "⚂"
+
+        4 ->
+            "⚃"
+
+        5 ->
+            "⚄"
+
+        6 ->
+            "⚅"
+
+        _ ->
+            String.fromInt dieFace
